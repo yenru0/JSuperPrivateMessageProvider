@@ -31,9 +31,9 @@ COMMON_OBJS = $(COMMON_BUILD_OBJS_DIR)/$(notdir $(COMMON_SRCS:.cpp=.o))
 COMMON_INCLUDE = $(wildcard $(COMMON_SRC_DIR)/*.h)
 all: build
 
-build: client_build
+build: client_build server_build
 
-clean: client_clean
+clean: client_clean server_clean common_clean
 
 client_build: client_init common_compile client_compile
 	$(CXX) $(CXXFLAGS) $(CLIENT_OBJS) $(COMMON_OBJS) -o $(BUILD_DIR)/$(CLIENT_TARGET)
