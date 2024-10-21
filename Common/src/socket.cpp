@@ -7,21 +7,25 @@ void read_childproc(int sig) {
     printf("removed proc id : %d \n", pid);
 }
 
-void error_handling(char *message) {
+void error_handling(const char *message) {
     fputs(message, stderr);
     fputc('\n', stderr);
     exit(1);
 }
 
-bool ServerSocket::bindSocket(char *port) {
-    struct sockaddr_in addr;
-    bzero((char *) &addr, sizeof(addr));
+ServerSocket::ServerSocket() {
+    clnt_sock = -1;
+    recv_buffer = new char[BUFSIZE];
+}
 
-    addr.sin_family = AF_INET;
-    addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    addr.sin_port = htons(atoi(port));
+bool ServerSocket::bindSocket(uint16_t port) {
+    bzero((char *) &server_addr, sizeof(server_addr));
 
-    int flag = bind(fd, (struct sockaddr *) &addr, sizeof(addr));
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+    server_addr.sin_port = htons(port);
+
+    int flag = bind(fd, (struct sockaddr *) &server_addr, sizeof(server_addr));
     if (flag == -1)
         return false;
     else
@@ -37,33 +41,25 @@ bool ServerSocket::listenSocket(int num) {
 }
 
 bool ServerSocket::acceptSocket() {
-    struct sockaddr_in addr;
+    if (clnt_sock != -1) return false; // only one client
+    sockaddr_in addr;
     socklen_t addr_size;
     addr_size = sizeof(addr);
     clnt_sock = accept(fd, (struct sockaddr *) &addr, &addr_size);
-
     if (clnt_sock == -1)
         return false;
     else
         return true;
 }
 
-bool ServerSocket::sendFile(char *filename) {
-    char buf[BUFSIZE];
-    FILE *file = fopen(filename, "rb");
-
-    fseek(file, 0, SEEK_END);// 파일 끝으로 이동
-    size_t fsize = ftell(file);// 파일 크기 계산
-    fseek(file, 0, SEEK_SET);
-    int nsize = 0;
-
-    while (nsize != fsize) {
-        int fpsize = fread(buf, 1, BUFSIZE, file);
-        nsize += fpsize;
-        if (send(clnt_sock, buf, fpsize, 0) == -1) {
-            return false;
-        }
+bool ServerSocket::recvMsg() {
+    memset(recv_buffer, 0, BUFSIZE);
+    if (recv(clnt_sock, recv_buffer, BUFSIZE, 0) > 0) {
+        return true;
     }
-    fclose(file);
-    return true;
+    return false;
+}
+
+std::string ServerSocket::getBufferedMsg() {
+    return std::string(recv_buffer);
 }

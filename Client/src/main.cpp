@@ -8,7 +8,6 @@
 #include "socket.h"
 
 int main(void) {
-    Socket s = Socket();
 
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -19,12 +18,13 @@ int main(void) {
 
     connect(sockfd, (struct sockaddr *) &(serverAddress), sizeof(serverAddress));
 
-    std::string message = "Hello Server!";
+    std::string message;
 
+    std::cin >> message;
     send(sockfd, message.c_str(), message.size(), 0);
     std::cout << "Sent Message: " << message << std::endl;
 
-    close(sockfd);
+    std::cout << close(sockfd) << std::endl;
 
     return 0;
 
