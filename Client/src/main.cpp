@@ -9,23 +9,22 @@
 
 int main(void) {
 
-    int sockfd = socket(AF_INET, SOCK_STREAM, 0);
-
-    struct sockaddr_in serverAddress;
-    serverAddress.sin_family = AF_INET;
-    serverAddress.sin_port = htons(12345);
-    inet_pton(AF_INET, "127.0.0.1", &(serverAddress.sin_addr));
-
-    connect(sockfd, (struct sockaddr *) &(serverAddress), sizeof(serverAddress));
-
+    ClientSocket socket;
     std::string message;
 
-    std::cin >> message;
-    send(sockfd, message.c_str(), message.size(), 0);
-    std::cout << "Sent Message: " << message << std::endl;
+    socket.set_address("127.0.0.1", 12345);
 
-    std::cout << close(sockfd) << std::endl;
+    socket.connectSocket();
+
+
+    while(true) {
+        std::cin >> message;
+        if(message == ":quit") {
+            break;
+        } else {
+            socket.sendMsg(message);
+        }
+    }
 
     return 0;
-
 }

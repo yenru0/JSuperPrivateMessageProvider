@@ -14,8 +14,9 @@ void error_handling(const char *message) {
 }
 
 ServerSocket::ServerSocket() {
-    clnt_sock = -1;
-    recv_buffer = new char[BUFSIZE];
+}
+
+ServerSocket::~ServerSocket() {
 }
 
 bool ServerSocket::bindSocket(uint16_t port) {
@@ -40,21 +41,52 @@ bool ServerSocket::listenSocket(int num) {
         return true;
 }
 
-bool ServerSocket::acceptSocket() {
-    if (clnt_sock != -1) return false; // only one client
+void ServerSocket::closeListenSocket() {
+    this->close();
+}
+
+int ServerSocket::acceptSocket() {
     sockaddr_in addr;
     socklen_t addr_size;
     addr_size = sizeof(addr);
-    clnt_sock = accept(fd, (struct sockaddr *) &addr, &addr_size);
+    int clnt_sock = accept(fd, (struct sockaddr *) &addr, &addr_size);
     if (clnt_sock == -1)
-        return false;
-    else
-        return true;
+        return -1;
+    else {
+        return clnt_sock;
+    }
 }
 
-bool ServerSocket::recvMsg() {
+
+ClientSocket::ClientSocket() {
+}
+
+void ClientSocket::set_address(const char *ip, int16_t port) {
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_port = htons(port);
+    inet_pton(AF_INET, ip, &(server_addr.sin_addr));
+}
+
+void ClientSocket::connectSocket() {
+    connect(fd, (sockaddr *) &(server_addr), sizeof(server_addr));
+}
+
+void ClientSocket::sendMsg(std::string msg) {
+    ::send(fd, msg.c_str(), sizeof(msg), 0);
+}
+
+
+/*
+void ServerSocket::closeAcceptSocket(int idx) {
+    delete clnt_socks[idx];
+    clnt_socks[idx] = nullptr;
+}
+
+
+
+bool ServerSocket::recvMsg(int idx) {
     memset(recv_buffer, 0, BUFSIZE);
-    if (recv(clnt_sock, recv_buffer, BUFSIZE, 0) > 0) {
+    if (::recv(clnt_socks[idx]->get_fd(), recv_buffer, BUFSIZE, 0) > 0) {
         return true;
     }
     return false;
@@ -63,3 +95,4 @@ bool ServerSocket::recvMsg() {
 std::string ServerSocket::getBufferedMsg() {
     return std::string(recv_buffer);
 }
+ */

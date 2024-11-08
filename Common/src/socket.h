@@ -9,6 +9,8 @@
 #include <cstdlib>
 #include <cstdio>
 #include <string>
+#include <vector>
+#include <thread>
 
 #define BUFSIZE 4096
 
@@ -17,37 +19,52 @@ void read_childproc(int sig);
 void error_handling(const char *message);
 
 class Socket {
-protected :
+protected:
     int fd;
+
 public:
+
     Socket() { fd = socket(AF_INET, SOCK_STREAM, 0); }
 
-    void closeSocket() { close(fd); }
+    Socket(int clnt_sock) { fd = clnt_sock; }
+
+    virtual ~Socket() { close(); }
+
+    int get_fd() const { return fd; }
+
+    void close() const { ::close(fd); }
 };
 
 class ServerSocket : public Socket {
 protected:
-    int clnt_sock;
     struct sockaddr_in server_addr;
-    char *recv_buffer;
+
 public:
     ServerSocket();
+
+    ~ServerSocket() override;
 
     bool bindSocket(uint16_t port);
 
     bool listenSocket(int num);
 
-    bool acceptSocket();
+    int acceptSocket();
 
-    void closeListenSocket() { closeSocket(); }
+    void closeListenSocket();
+};
 
-    void closeAcceptSocket() {
-        close(clnt_sock);
-        clnt_sock = -1;
-    }
+class ClientSocket : public Socket {
+protected:
+    struct sockaddr_in server_addr;
 
-    bool recvMsg();
+public:
+    ClientSocket();
 
-    std::string getBufferedMsg();
+    void set_address(const char *ip, int16_t port);
+
+    void connectSocket();
+
+    void sendMsg(std::string msg);
+
 };
 
